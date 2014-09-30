@@ -1,0 +1,61 @@
+DECLARE 
+@email nvarchar(255),
+@count int;
+ 
+DECLARE vendor_cursor CURSOR FOR 
+ 
+      select [email address]
+      from ybh_markex2010SQL.dbo.markexscan
+ 
+      OPEN vendor_cursor;
+ 
+FETCH NEXT FROM vendor_cursor INTO @email
+ 
+WHILE @@FETCH_STATUS = 0 
+BEGIN 
+     
+                              insert into ybh2010.dbo.users
+                              (userid,
+                              Title,
+                              Firstname,
+                              Surname,
+                              Company,
+                              Email,
+                              Telno,
+                              Cell,
+                              Referrer,
+                              Stage_Completed,
+                              Deleted,
+                              Declined,
+                              Approved,
+                              Suspended)
+                              select top 1
+                              newID(),
+                              [Title],
+                              [First Name],
+                              [Last name],
+                              [Company Name],
+                              [Email Address],
+                              [Tel no],
+                              [Mobile no],
+                              'Markex_2010',
+                              0,
+                              0,
+                              0,
+                              0,
+                              0
+                              from ybh_markex2010SQL.dbo.markexscan
+                              Where [email address] NOT IN (
+ 
+                              select email from ybh2010.dbo.users where email is not null
+ 
+                              ) and [email address]=@email
+ 
+ 
+    FETCH NEXT FROM vendor_cursor INTO @email
+END 
+ 
+ 
+CLOSE vendor_cursor;
+DEALLOCATE vendor_cursor;
+ 

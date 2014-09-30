@@ -1,0 +1,35 @@
+DECLARE 
+@field nvarchar(255),
+@SearchStr nvarchar(255),
+@id int;
+set @SearchStr = '</title>'
+ 
+DECLARE vendor_cursor CURSOR FOR 
+ 
+      select #ColtoReplace , #ColID
+      from #Table
+		where #ColtoReplace like '%'+@SearchStr+'%'
+	
+
+      OPEN vendor_cursor;
+ 
+FETCH NEXT FROM vendor_cursor INTO @field, @id
+ 
+WHILE @@FETCH_STATUS = 0 
+BEGIN 
+     
+	update #Table
+	set  
+	#ColtoReplace =  REPLACE (@field, (select SUBSTRING(@field,  
+	(SELECT CHARINDEX(@SearchStr, #ColtoReplace) FROM #Table
+	where #ColID = @id ),500)), '')
+	where #ColID = @id
+	
+
+
+    FETCH NEXT FROM vendor_cursor INTO @field, @id
+END 
+ 
+ 
+CLOSE vendor_cursor;
+DEALLOCATE vendor_cursor;

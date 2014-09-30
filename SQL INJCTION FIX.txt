@@ -1,0 +1,9 @@
+Step one: Open "Fide SQL Injection.sql" in SQL, change the variable @SearchStr to the start string of the SQL injection This will generate a temp table for you to see the results, removes table after display.
+
+Step Two: Open "Remove SQL Injection.sql" in SQL, change the variable @SearchStr to the start string of the SQL injection
+            For every row in the above SQL statement you will replace all instances of :
+                  #ColtoReplace
+                  #ColID
+                  #Table
+            with respective values
+

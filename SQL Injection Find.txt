@@ -1,0 +1,91 @@
+--drop proc [dbo].[SearchAllTables]
+--/****** Object:  StoredProcedure [dbo].[SearchAllTables]    Script Date: 09/21/2010 10:10:42 ******/
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--CREATE PROC [dbo].[SearchAllTables]
+--(
+--            @SearchStr nvarchar(max)
+--)
+--AS
+--BEGIN
+-- 
+declare            @SearchStr nvarchar(max)
+set @SearchStr = '</title>'
+            -- Copyright © 2002 Narayana Vyas Kondreddi. All rights reserved.
+            -- Purpose: To search all columns of all tables for a given search string
+            -- Written by: Narayana Vyas Kondreddi
+            -- Site: http://vyaskn.tripod.com
+            -- Tested on: SQL Server 7.0 and SQL Server 2000
+            -- Date modified: 28th July 2002 22:50 GMT
+ 
+ 
+            CREATE TABLE #Results (ColumnName nvarchar(max), ColumnValue nvarchar(max), TableName nvarchar(max), IDCol nvarchar(max))
+ 
+            SET NOCOUNT ON
+ 
+            DECLARE @TableName nvarchar(max), @ColumnName nvarchar(max), @SearchStr2 nvarchar(500), @IDCol nvarchar(500)
+            SET  @TableName = ''
+            SET  @IDCol = ''
+            SET @SearchStr2 = QUOTENAME('%' + @SearchStr + '%','''')
+ 
+            WHILE @TableName IS NOT NULL
+            BEGIN
+                        SET @ColumnName = ''
+                        SET @TableName = 
+                        (
+                                    SELECT MIN(QUOTENAME(TABLE_SCHEMA) + '.' + QUOTENAME(TABLE_NAME))
+                                    FROM    INFORMATION_SCHEMA.TABLES
+                                    WHERE                         TABLE_TYPE = 'BASE TABLE'
+                                                AND      QUOTENAME(TABLE_SCHEMA) + '.' + QUOTENAME(TABLE_NAME) > @TableName
+                                                AND      OBJECTPROPERTY(
+                                                                        OBJECT_ID(
+                                                                                    QUOTENAME(TABLE_SCHEMA) + '.' + QUOTENAME(TABLE_NAME)
+                                                                                     ), 'IsMSShipped'
+                                                                               ) = 0
+                        )
+ 
+                        WHILE (@TableName IS NOT NULL) AND (@ColumnName IS NOT NULL)
+                        BEGIN
+                                    SET @ColumnName =
+                                    (
+                                                SELECT MIN(QUOTENAME(COLUMN_NAME))
+                                                FROM    INFORMATION_SCHEMA.COLUMNS
+                                                WHERE                         TABLE_SCHEMA            = PARSENAME(@TableName, 2)
+                                                            AND      TABLE_NAME    = PARSENAME(@TableName, 1)
+                                                            AND      DATA_TYPE IN ('char', 'varchar', 'nchar', 'nvarchar', 'text', 'ntext')
+                                                            AND      QUOTENAME(COLUMN_NAME) > @ColumnName
+                                    )
+                                    SET @IDCol =
+                                    (
+                                                SELECT MIN(QUOTENAME(COLUMN_NAME))
+                                                FROM    INFORMATION_SCHEMA.COLUMNS
+												where	COLUMNPROPERTY(OBJECT_ID(@TableName)
+																		  ,COLUMN_NAME,'IsIdentity') = 1 
+                                    )
+            
+                                    IF @ColumnName IS NOT NULL
+                                    BEGIN
+                                                INSERT INTO #Results
+                                                EXEC
+                                                (
+                                                            'SELECT ''' +  @ColumnName + ''', SUBSTRING(' + @ColumnName + ',1, 8000) , '''+@TableName+''', '''+@IDCol+'''
+                                                            FROM ' + @TableName + ' (NOLOCK) ' +
+                                                            ' WHERE ' + @ColumnName + ' LIKE ' + @SearchStr2
+                                                )
+                                    END
+                        END      
+            END
+ 
+            
+
+     
+select * from #Results
+
+
+
+
+
+drop table #Results
+--END
